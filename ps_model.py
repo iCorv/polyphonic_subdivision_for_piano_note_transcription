@@ -251,7 +251,7 @@ def conv_net_init(features, labels, mode, learning_rate_fn, loss_filter_fn, weig
             predictions=predictions,
             export_outputs={'predictions': tf.estimator.export.PredictOutput(predictions)})
 
-    labels_1, labels_2 = tf.split(labels, num_or_size_splits=2, axis=1)
+    labels_1, labels_2 = tf.split(labels, num_or_size_splits=2, axis=2)
 
     print("labels_1: " + str(labels_1.shape))
 
