@@ -331,7 +331,7 @@ def write_file_to_non_overlap_tfrecords(write_file, base_dir, read_file, audio_c
 
     split_spec[-1] = np.append(split_spec[-1], np.zeros([context_frames - split_spec[-1].shape[0], split_spec[-1].shape[1]]),
                                axis=0)
-    split_gt[-1] = np.append(split_gt[-1], np.zeros([context_frames - split_gt[-1].shape[0], split_gt[-1].shape[1]]),
+    split_gt[-1] = np.append(split_gt[-1], np.zeros([context_frames - split_gt[-1].shape[0], split_gt[-1].shape[1]], dtype=np.int64),
                                axis=0)
 
     for ex, gt in zip(split_spec, split_gt):
