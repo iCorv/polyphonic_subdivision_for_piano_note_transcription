@@ -206,7 +206,7 @@ def conv_net_init(features, labels, mode, learning_rate_fn, loss_filter_fn, weig
         logits = resnet(features, mode == tf.estimator.ModeKeys.TRAIN, data_format=data_format,
                             num_classes=num_classes)
 
-    logits = tf.concat([logits_1, logits_2], axis=1)
+    logits = tf.concat([logits_1, logits_2], axis=2)
     print(logits.shape)
 
     # Visualize conv1 kernels
@@ -232,7 +232,7 @@ def conv_net_init(features, labels, mode, learning_rate_fn, loss_filter_fn, weig
 
     labels_1, labels_2 = tf.split(labels, num_or_size_splits=2, axis=1)
 
-    print(labels_1.shape)
+    print("labels_1: " + str(labels_1.shape))
 
     if use_rnn:
         individual_loss_1 = log_loss(labels_1, predictions['probabilities_1'], epsilon=clip_norm)
