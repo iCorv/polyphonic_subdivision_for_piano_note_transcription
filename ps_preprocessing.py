@@ -17,7 +17,7 @@ import numpy as np
 import madmom
 import tensorflow as tf
 import os
-import configurations.pop_preprocessing_parameters as ppp
+import configurations.ps_preprocessing_parameters as ppp
 import warnings
 from joblib import Parallel, delayed
 import multiprocessing
@@ -44,7 +44,17 @@ def wav_to_spec(base_dir, filename, _audio_options):
 
     # it's necessary to cast this to np.array, b/c the madmom-class holds references to way too much memory
     spectrogram = np.array(spec_type(audio_filename, **audio_options))
-    return spectrogram
+
+    superflux_proc = madmom.audio.spectrogram.SpectrogramDifferenceProcessor(diff_max_bins=3)
+    superflux_freq = superflux_proc(spectrogram.T)
+    superflux_freq = superflux_freq.T
+
+    superflux_time = superflux_proc(spectrogram)
+
+    comb = spectrogram + superflux_time + superflux_freq
+    comb = comb / np.max(np.max(comb))
+    comb = np.clip(comb, a_min=0.001, a_max=1.0)
+    return comb
 
 
 def wav_to_hpcp(base_dir, filename):
@@ -316,16 +326,15 @@ def write_file_to_non_overlap_tfrecords(write_file, base_dir, read_file, audio_c
     if norm:
         spectrogram = np.divide(spectrogram, np.max(spectrogram))
 
-    #split_spec = np.array_split(spectrogram, int(spectrogram.shape[0] / 2000), axis=0)
-    #split_gt = np.array_split(ground_truth, int(spectrogram.shape[0] / 2000), axis=0)
+    split_spec = list(chunks(spectrogram, context_frames))
+    split_gt = list(chunks(ground_truth, context_frames))
 
-    split_spec = list(chunks(spectrogram, 2000))
-    split_gt = list(chunks(ground_truth, 2000))
+    split_spec[-1] = np.append(split_spec[-1], np.zeros([context_frames - split_spec[-1].shape[0], split_spec[-1].shape[1]]),
+                               axis=0)
+    split_gt[-1] = np.append(split_gt[-1], np.zeros([context_frames - split_gt[-1].shape[0], split_gt[-1].shape[1]]),
+                               axis=0)
 
-    #print(split_spec[1].shape)
-    #print(split_gt[0].shape)
-
-    for ex, gt in zip(split_spec[:-1], split_gt[:-1]):
+    for ex, gt in zip(split_spec, split_gt):
         example = features_to_non_overlap_example(ex, gt)
 
         # Serialize to string and write on the file

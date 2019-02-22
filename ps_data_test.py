@@ -5,7 +5,7 @@ import numpy as np
 import madmom
 import glob
 import tensorflow as tf
-import pop_input_data
+import ps_input_data
 from scipy import signal
 
 
@@ -19,7 +19,7 @@ def import_tfrecord(filepath):
     #spec = tf.slice(spec, [0, 0, 1], [5, 231, 1])
     #dataset = pop_input_data.tfrecord_test_input_fn(filepath, 1, 1)
 
-    dataset = pop_input_data.tfrecord_triple_test_input_fn(filepath, 1, 1)
+    dataset = ps_input_data.tfrecord_triple_test_input_fn(filepath, 1, 1)
 
     # Make dataset iteratable.
     iterator = dataset.make_one_shot_iterator()
@@ -76,7 +76,7 @@ def import_non_overlap_tfrecord(filepath):
     #spec = tf.slice(spec, [0, 0, 1], [5, 231, 1])
     #dataset = pop_input_data.tfrecord_test_input_fn(filepath, 1, 1)
 
-    dataset = pop_input_data.tfrecord_test_input_fn(filepath, 1, 1)
+    dataset = ps_input_data.tfrecord_test_input_fn(filepath, 1, 1)
 
     # Make dataset iteratable.
     iterator = dataset.make_one_shot_iterator()
@@ -123,7 +123,7 @@ def import_single_example(filepath):
     # Extract features from single example
     #spec, labels = pop_input_data.tfrecord_train_parser(next_example)
     #spec = tf.slice(spec, [0, 0, 1], [5, 231, 1])
-    dataset = pop_input_data.tfrecord_test_input_fn(filepath, 8, 1)
+    dataset = ps_input_data.tfrecord_test_input_fn(filepath, 8, 1)
 
     # Make dataset iteratable.
     iterator = dataset.make_one_shot_iterator()
@@ -182,7 +182,7 @@ def show_record(filepath):
 
 
     # Extract features from single example
-    spec, labels = pop_input_data.tfrecord_train_parser(next_example)
+    spec, labels = ps_input_data.tfrecord_train_parser(next_example)
 
     f, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1, sharey=False)
     np_spec = np.zeros((231, 2, 3))

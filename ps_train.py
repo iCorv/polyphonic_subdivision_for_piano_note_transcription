@@ -4,12 +4,12 @@ from __future__ import print_function
 
 
 import tensorflow as tf
-import configurations.pop_hyper_parameters as php
-import pop_input_data as dataset
+import configurations.ps_hyper_parameters as php
+import ps_input_data as dataset
 import os
 #from official.utils.logs import logger
 import numpy as np
-import pop_model
+import ps_model
 import glob
 
 train_dataset_tfrecord = glob.glob("./tfrecords-dataset/sigtia-configuration2-splits/fold_1/train/*.tfrecords")
@@ -40,7 +40,7 @@ def main(_):
         log_step_count_steps=30
     )
     classifier = tf.estimator.Estimator(
-        model_fn=pop_model.conv_net_model_fn,
+        model_fn=ps_model.conv_net_model_fn,
         model_dir="./model",
         config=estimator_config,
         params=hparams)

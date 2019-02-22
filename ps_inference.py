@@ -1,10 +1,10 @@
 import tensorflow as tf
-import pop_model
-import configurations.pop_hyper_parameters as php
+import ps_model
+import configurations.ps_hyper_parameters as php
 import numpy as np
-import pop_preprocessing as prep
-import configurations.pop_preprocessing_parameters as ppp
-import pop_utility as util
+import ps_preprocessing as prep
+import configurations.ps_preprocessing_parameters as ppp
+import ps_utility as util
 import madmom
 import os
 import mir_eval
@@ -430,7 +430,7 @@ def get_serving_input_fn(frames, bins):
 def build_predictor(net, model_dir):
     hparams = php.get_hyper_parameters(net)
     classifier = tf.estimator.Estimator(
-        model_fn=pop_model.conv_net_model_fn,
+        model_fn=ps_model.conv_net_model_fn,
         model_dir=model_dir,
         # warm_start_from=model_dir,
         params=hparams)

@@ -240,20 +240,7 @@ def conv_net_init(features, labels, mode, learning_rate_fn, loss_filter_fn, weig
 
     loss = tf.reduce_mean(individual_loss)
 
-    # loss_filter_fn = loss_filter_fn
-    #
-    # # Add weight decay to the loss.
-    # l2_loss = weight_decay * tf.add_n(
-    #     # loss is computed using fp32 for numerical stability.
-    #     [tf.nn.l2_loss(tf.cast(v, tf.float32)) for v in tf.trainable_variables()
-    #      if loss_filter_fn(v.name)])
-    # l1_loss = tf.add_n(
-    #     # loss is computed using fp32 for numerical stability.
-    #     [l1_loss_fn(tf.cast(v, tf.float32), weight_decay, scope='l1_loss') for v in tf.trainable_variables()
-    #      if loss_filter_fn(v.name)])
-    # tf.summary.scalar('l2_loss', l2_loss)
-    # tf.summary.scalar('l1_loss', l1_loss)
-    # loss = loss + l1_loss + l2_loss
+
 
     if mode == tf.estimator.ModeKeys.TRAIN:
         global_step = tf.train.get_or_create_global_step()
