@@ -197,17 +197,39 @@ def conv_net_init(features, labels, mode, learning_rate_fn, loss_filter_fn, weig
 
 
     if use_rnn:
-        logits_1 = resnet_rnn(features, mode == tf.estimator.ModeKeys.TRAIN, batch_size=batch_size, data_format=data_format,
+        with tf.variable_scope('keyboard_subdivision_1'):
+            logits_1 = resnet_rnn(features, mode == tf.estimator.ModeKeys.TRAIN, batch_size=batch_size, data_format=data_format,
+                                    num_classes=num_classes)
+            probs_subdiv_1 = tf.sigmoid(logits_1)
+        with tf.variable_scope('keyboard_subdivision_2'):
+            logits_2 = resnet_rnn(features, mode == tf.estimator.ModeKeys.TRAIN, batch_size=batch_size,
+                                data_format=data_format,
                                 num_classes=num_classes)
-        logits_2 = resnet_rnn(features, mode == tf.estimator.ModeKeys.TRAIN, batch_size=batch_size,
-                            data_format=data_format,
-                            num_classes=num_classes)
+            probs_subdiv_2 = tf.sigmoid(logits_2)
     else:
         logits = resnet(features, mode == tf.estimator.ModeKeys.TRAIN, data_format=data_format,
                             num_classes=num_classes)
 
-    logits = tf.concat([logits_1, logits_2], axis=2)
-    print(logits.shape)
+
+    probs = []
+    # tf.stop_gradient "pretends" to be a constant. In other words, inputs to this function are masked from the gradient computation.
+    probs.append(tf.stop_gradient(probs_subdiv_1))
+    probs.append(tf.stop_gradient(probs_subdiv_2))
+    combined_probs = tf.concat(probs, 2)
+    print(combined_probs.shape)
+
+    outputs = lstm_layer(
+        combined_probs,
+        batch_size=batch_size,
+        num_units=256,
+        lengths=None,
+        # needs a vector of length batch size with the entries defining the length of each sequence. In case sequences differ in length
+        stack_size=1,
+        use_cudnn=True,
+        is_training=mode == tf.estimator.ModeKeys.TRAIN,
+        bidirectional=True)
+
+    frame_probs = slim.fully_connected(outputs, 88, activation_fn=tf.sigmoid, scope='fc_frame')
 
     # Visualize conv1 kernels
     # with tf.variable_scope('conv1'):
@@ -217,10 +239,9 @@ def conv_net_init(features, labels, mode, learning_rate_fn, loss_filter_fn, weig
     #     tf.summary.image('conv1/kernels', grid, max_outputs=1)
 
     predictions = {
-        'classes': tf.round(tf.sigmoid(logits)),
-        'probabilities_1': tf.sigmoid(logits_1, name='sigmoid_tensor_1'),
-        'probabilities_2': tf.sigmoid(logits_2, name='sigmoid_tensor_2'),
-        'logits': logits
+        'classes': tf.round(tf.sigmoid(combined_probs)),
+        'probabilities': tf.sigmoid(frame_probs, name='probs_tensor'),
+        'logits': combined_probs
     }
 
     if mode == tf.estimator.ModeKeys.PREDICT:
@@ -235,15 +256,17 @@ def conv_net_init(features, labels, mode, learning_rate_fn, loss_filter_fn, weig
     print("labels_1: " + str(labels_1.shape))
 
     if use_rnn:
-        individual_loss_1 = log_loss(labels_1, predictions['probabilities_1'], epsilon=clip_norm)
-        individual_loss_2 = log_loss(labels_2, predictions['probabilities_2'], epsilon=clip_norm)
+        individual_loss_subdiv_1 = log_loss(labels_1, probs_subdiv_1, epsilon=clip_norm)
+        individual_loss_subdiv_2 = log_loss(labels_2, probs_subdiv_2, epsilon=clip_norm)
+        frame_losses = log_loss(frame_probs, labels, epsilon=clip_norm)
     else:
         individual_loss = log_loss(labels, tf.clip_by_value(predictions['probabilities'], clip_norm, 1.0 - clip_norm),
                                    epsilon=0.0)
 
     #loss = tf.reduce_mean(individual_loss_1)
-    tf.losses.add_loss(tf.reduce_mean(individual_loss_1))
-    tf.losses.add_loss(tf.reduce_mean(individual_loss_2))
+    tf.losses.add_loss(tf.reduce_mean(individual_loss_subdiv_1))
+    tf.losses.add_loss(tf.reduce_mean(individual_loss_subdiv_2))
+    tf.losses.add_loss(tf.reduce_mean(frame_losses))
     loss = tf.losses.get_total_loss()
 
 
