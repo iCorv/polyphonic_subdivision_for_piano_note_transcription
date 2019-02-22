@@ -49,7 +49,7 @@ def tfrecord_train_input_fn(filepath, batch_size, num_epochs):
     # dataset = dataset.shuffle(100000)
     # dataset = dataset.repeat(num_epochs)
     dataset = dataset.apply(tf.data.experimental.shuffle_and_repeat(500, num_epochs))
-    dataset = dataset.apply(tf.data.experimental.map_and_batch(tfrecord_non_overlap_parser, batch_size, num_parallel_calls=tf.data.experimental.AUTOTUNE))
+    dataset = dataset.apply(tf.data.experimental.map_and_batch(tfrecord_non_overlap_parser, batch_size, num_parallel_calls=4))
     # dataset = dataset.map(tfrecord_train_parser)
     # dataset = dataset.batch(batch_size)
     #dataset = dataset.prefetch(batch_size)
@@ -66,7 +66,7 @@ def tfrecord_val_input_fn(filepath, batch_size, num_epochs):
     # dataset = dataset.map(tfrecord_train_parser)
     # dataset = dataset.batch(batch_size)
     dataset = dataset.apply(tf.data.experimental.shuffle_and_repeat(500, num_epochs))
-    dataset = dataset.apply(tf.data.experimental.map_and_batch(tfrecord_non_overlap_parser, batch_size, num_parallel_calls=tf.data.experimental.AUTOTUNE))
+    dataset = dataset.apply(tf.data.experimental.map_and_batch(tfrecord_non_overlap_parser, batch_size, num_parallel_calls=4))
     #dataset = dataset.prefetch(batch_size)
 
     return dataset
