@@ -14,11 +14,11 @@ DEFAULT_DTYPE = tf.float32
 # fold_1: train - 4194573, valid - 749017, test - 1569045
 
 # RNN with 2000 frames
-# fold_1: train - 2008, valid - , test - 752
+# fold_1: train - 2188, valid - , test - 812
 
-num_examples = 2008
-num_val_examples = 752
-num_test_examples = 752
+num_examples = 2188
+num_val_examples = 812
+num_test_examples = 812
 batch_size = 8 # 128 for conv, 8 for RNN
 batches_per_epoch = int(round(num_examples/batch_size))
 train_epochs = 150
@@ -60,9 +60,9 @@ def get_hyper_parameters(net):
                   'momentum_cycle': [0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9],
                   # [momentum for momentum in frange(0.95, 0.85, (0.95-0.85)/(30+2))][0:30] + [momentum for momentum in frange(0.85, 0.95, (0.95-0.85)/(30+2))][0:31],
                   'frames': 15,
-                  'freq_bins': 88, # 76 for octave-wise HPCP, 229 for log spec
+                  'freq_bins': 199, # 76 for octave-wise HPCP, 229 for log spec
                   'num_channels': 1,
-                  'num_classes': 88,
+                  'num_classes': 44,
                   'num_examples': num_examples,
                   'num_val_examples': num_val_examples,
                   'num_test_examples': num_test_examples,
@@ -95,9 +95,9 @@ def get_hyper_parameters(net):
                   'momentum_cycle': [0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9],
                   # [momentum for momentum in frange(0.95, 0.85, (0.95-0.85)/(30+2))][0:30] + [momentum for momentum in frange(0.85, 0.95, (0.95-0.85)/(30+2))][0:31],
                   'frames': 2000,
-                  'freq_bins': 229, # 76 for octave-wise HPCP, 229 for log spec
+                  'freq_bins': 199, # 76 for octave-wise HPCP, 229 for log spec
                   'num_channels': 1,
-                  'num_classes': 88,
+                  'num_classes': 44,
                   'num_examples': num_examples,
                   'num_val_examples': num_val_examples,
                   'num_test_examples': num_test_examples,

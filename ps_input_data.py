@@ -7,7 +7,7 @@ import matplotlib
 matplotlib.use('TkAgg')
 
 
-feature_shape = [2000, 76, 1]
+feature_shape = [2000, 199, 1]
 
 num_labels = 88
 num_features = feature_shape[0] * feature_shape[1] * feature_shape[2]

@@ -195,17 +195,19 @@ def conv_net_init(features, labels, mode, learning_rate_fn, loss_filter_fn, weig
     if mode != tf.estimator.ModeKeys.PREDICT:
         labels = tf.cast(labels, dtype)
 
-    if architecture == 'resnet':
-        if use_rnn:
-            logits = resnet_rnn(features, mode == tf.estimator.ModeKeys.TRAIN, batch_size=batch_size, data_format=data_format,
+
+    if use_rnn:
+        logits_1 = resnet_rnn(features, mode == tf.estimator.ModeKeys.TRAIN, batch_size=batch_size, data_format=data_format,
                                 num_classes=num_classes)
-        else:
-            logits = resnet(features, mode == tf.estimator.ModeKeys.TRAIN, data_format=data_format,
+        logits_2 = resnet_rnn(features, mode == tf.estimator.ModeKeys.TRAIN, batch_size=batch_size,
+                            data_format=data_format,
                             num_classes=num_classes)
     else:
-        logits = conv_net_kelz(features, mode == tf.estimator.ModeKeys.TRAIN, data_format=data_format,
-                               batch_size=batch_size, num_classes=num_classes)
+        logits = resnet(features, mode == tf.estimator.ModeKeys.TRAIN, data_format=data_format,
+                            num_classes=num_classes)
 
+    logits = tf.concat([logits_1, logits_2], axis=1)
+    print(logits.shape)
 
     # Visualize conv1 kernels
     # with tf.variable_scope('conv1'):
@@ -214,14 +216,10 @@ def conv_net_init(features, labels, mode, learning_rate_fn, loss_filter_fn, weig
     #     grid = put_kernels_on_grid(weights)
     #     tf.summary.image('conv1/kernels', grid, max_outputs=1)
 
-    # This acts as a no-op if the logits are already in fp32 (provided logits are
-    # not a SparseTensor). If dtype is of low precision, logits must be cast to
-    # fp32 for numerical stability.
-    logits = tf.cast(logits, tf.float32)
-
     predictions = {
         'classes': tf.round(tf.sigmoid(logits)),
-        'probabilities': tf.sigmoid(logits, name='sigmoid_tensor'),
+        'probabilities_1': tf.sigmoid(logits_1, name='sigmoid_tensor_1'),
+        'probabilities_2': tf.sigmoid(logits_2, name='sigmoid_tensor_2'),
         'logits': logits
     }
 
@@ -232,14 +230,21 @@ def conv_net_init(features, labels, mode, learning_rate_fn, loss_filter_fn, weig
             predictions=predictions,
             export_outputs={'predictions': tf.estimator.export.PredictOutput(predictions)})
 
+    labels_1, labels_2 = tf.split(labels, num_or_size_splits=2, axis=1)
+
+    print(labels_1.shape)
+
     if use_rnn:
-        individual_loss = log_loss(labels, predictions['probabilities'], epsilon=clip_norm)
+        individual_loss_1 = log_loss(labels_1, predictions['probabilities_1'], epsilon=clip_norm)
+        individual_loss_2 = log_loss(labels_2, predictions['probabilities_2'], epsilon=clip_norm)
     else:
         individual_loss = log_loss(labels, tf.clip_by_value(predictions['probabilities'], clip_norm, 1.0 - clip_norm),
                                    epsilon=0.0)
 
-    loss = tf.reduce_mean(individual_loss)
-
+    #loss = tf.reduce_mean(individual_loss_1)
+    tf.losses.add_loss(tf.reduce_mean(individual_loss_1))
+    tf.losses.add_loss(tf.reduce_mean(individual_loss_2))
+    loss = tf.losses.get_total_loss()
 
 
     if mode == tf.estimator.ModeKeys.TRAIN:
@@ -265,15 +270,6 @@ def conv_net_init(features, labels, mode, learning_rate_fn, loss_filter_fn, weig
 
         if use_rnn:
             optimizer = tf.train.AdamOptimizer(learning_rate)
-        else:
-            optimizer = tf.train.MomentumOptimizer(
-                learning_rate=learning_rate,
-                momentum=momentum,
-                use_nesterov=True
-            )
-            update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-
-        if use_rnn:
             train_op = slim.learning.create_train_op(
                 loss,
                 optimizer,
@@ -281,9 +277,16 @@ def conv_net_init(features, labels, mode, learning_rate_fn, loss_filter_fn, weig
                 summarize_gradients=True,
                 variables_to_train=None)
         else:
+            optimizer = tf.train.MomentumOptimizer(
+                learning_rate=learning_rate,
+                momentum=momentum,
+                use_nesterov=True
+            )
+            update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
             with tf.control_dependencies(update_ops):
                 minimize_op = optimizer.minimize(loss, global_step)
             train_op = tf.group(minimize_op, update_ops)
+
     else:
         train_op = None
 
