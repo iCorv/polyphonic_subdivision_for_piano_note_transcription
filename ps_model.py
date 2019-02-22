@@ -201,13 +201,13 @@ def conv_net_init(features, labels, mode, learning_rate_fn, loss_filter_fn, weig
             logits_1 = resnet_rnn(features, mode == tf.estimator.ModeKeys.TRAIN, batch_size=batch_size, data_format=data_format,
                                     num_classes=num_classes)
             probs_subdiv_1 = tf.sigmoid(logits_1)
-            probs_subdiv_1, _ = tf.split(probs_subdiv_1, num_or_size_splits=2, axis=2)
+            #probs_subdiv_1, _ = tf.split(probs_subdiv_1, num_or_size_splits=2, axis=2)
         with tf.variable_scope('keyboard_subdivision_2'):
             logits_2 = resnet_rnn(features, mode == tf.estimator.ModeKeys.TRAIN, batch_size=batch_size,
                                 data_format=data_format,
                                 num_classes=num_classes)
             probs_subdiv_2 = tf.sigmoid(logits_2)
-            _, probs_subdiv_2 = tf.split(probs_subdiv_2, num_or_size_splits=2, axis=2)
+            #_, probs_subdiv_2 = tf.split(probs_subdiv_2, num_or_size_splits=2, axis=2)
     else:
         logits = resnet(features, mode == tf.estimator.ModeKeys.TRAIN, data_format=data_format,
                             num_classes=num_classes)
@@ -253,10 +253,10 @@ def conv_net_init(features, labels, mode, learning_rate_fn, loss_filter_fn, weig
             predictions=predictions,
             export_outputs={'predictions': tf.estimator.export.PredictOutput(predictions)})
 
-    filler_tensor = tf.constant(0.0, shape=[batch_size, 2000, 44], dtype=dtype)
+    #filler_tensor = tf.constant(0.0, shape=[batch_size, 2000, 44], dtype=dtype)
     labels_1, labels_2 = tf.split(labels, num_or_size_splits=2, axis=2)
-    labels_1 = tf.concat([labels_1, filler_tensor], axis=2)
-    labels_2 = tf.concat([filler_tensor, labels_2], axis=2)
+    #labels_1 = tf.concat([labels_1, filler_tensor], axis=2)
+    #labels_2 = tf.concat([filler_tensor, labels_2], axis=2)
 
     print("labels_1: " + str(labels_1.shape))
 
