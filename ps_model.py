@@ -239,8 +239,8 @@ def conv_net_init(features, labels, mode, learning_rate_fn, loss_filter_fn, weig
     #     tf.summary.image('conv1/kernels', grid, max_outputs=1)
 
     predictions = {
-        'classes': tf.round(tf.sigmoid(combined_probs)),
-        'probabilities': tf.sigmoid(frame_probs, name='probs_tensor'),
+        'classes': tf.cast(tf.greater_equal(frame_probs, 0.5), tf.float32),
+        'probabilities': frame_probs,
         'logits': combined_probs
     }
 
