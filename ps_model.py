@@ -321,57 +321,6 @@ def conv_net_init(features, labels, mode, learning_rate_fn, loss_filter_fn, weig
         eval_metric_ops=metrics)
 
 
-def conv_net_kelz(inputs, is_training, data_format='NHWC', batch_size=8, num_classes=88):
-    """Builds the ConvNet from Kelz 2016."""
-    if data_format == 'NCHW':
-        transpose_shape = [2, 1, 0]
-    else:
-        transpose_shape = [1, 0, 2]
-    with slim.arg_scope(
-          [slim.conv2d, slim.fully_connected],
-          activation_fn=tf.nn.relu,
-          weights_initializer=tf.contrib.layers.variance_scaling_initializer(
-              factor=2.0, mode='FAN_AVG', uniform=True)):
-        with slim.arg_scope([slim.batch_norm], is_training=is_training, data_format=data_format):
-            net = slim.conv2d(
-                inputs, 32, [3, 3], scope='conv1', normalizer_fn=slim.batch_norm, padding='SAME', data_format=data_format)
-            #conv1_output = tf.unstack(net, num=batch_size, axis=0)
-            #grid = put_kernels_on_grid(tf.expand_dims(tf.transpose(conv1_output[0], transpose_shape), 2))
-            #tf.summary.image('conv1/output', grid, max_outputs=1)
-            print(net.shape)
-
-            net = slim.conv2d(
-                net, 32, [3, 3], scope='conv2', normalizer_fn=slim.batch_norm, padding='VALID', data_format=data_format)
-            #conv2_output = tf.unstack(net, num=batch_size, axis=0)
-            #grid = put_kernels_on_grid(tf.expand_dims(tf.transpose(conv2_output[0], transpose_shape), 2))
-            #tf.summary.image('conv2/output', grid, max_outputs=1)
-            print(net.shape)
-            net = slim.max_pool2d(net, [1, 2], stride=[1, 2], scope='pool2', data_format=data_format)
-            print(net.shape)
-            net = slim.dropout(net, 0.25, scope='dropout2', is_training=is_training)
-
-            net = slim.conv2d(
-                net, 64, [3, 3], scope='conv3', normalizer_fn=slim.batch_norm, padding='VALID', data_format=data_format)
-            #conv3_output = tf.unstack(net, num=batch_size, axis=0)
-            #grid = put_kernels_on_grid(tf.expand_dims(tf.transpose(conv3_output[0], transpose_shape), 2))
-            #tf.summary.image('conv3/output', grid, max_outputs=1)
-            print(net.shape)
-            net = slim.max_pool2d(net, [1, 2], stride=[1, 2], scope='pool3', data_format=data_format)
-
-            net = slim.dropout(net, 0.25, scope='dropout3', is_training=is_training)
-
-            # Flatten
-            print(net.shape)
-            # was  64*1*51
-            net = tf.reshape(net, (-1, 64*1*55), 'flatten4')
-            print(net.shape)
-            net = slim.fully_connected(net, 512, scope='fc5')
-            print(net.shape)
-            net = slim.dropout(net, 0.5, scope='dropout5', is_training=is_training)
-            net = slim.fully_connected(net, num_classes, activation_fn=None, scope='fc6')
-            print(net.shape)
-            return net
-
 _BATCH_NORM_DECAY = 0.997
 _BATCH_NORM_EPSILON = 1e-5
 
