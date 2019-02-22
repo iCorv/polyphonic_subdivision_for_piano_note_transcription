@@ -215,7 +215,7 @@ def conv_net_init(features, labels, mode, learning_rate_fn, loss_filter_fn, weig
     # tf.stop_gradient "pretends" to be a constant. In other words, inputs to this function are masked from the gradient computation.
     probs.append(tf.stop_gradient(probs_subdiv_1))
     probs.append(tf.stop_gradient(probs_subdiv_2))
-    combined_probs = tf.concat(probs, 2)
+    combined_probs = tf.concat(probs, axis=2)
     print(combined_probs.shape)
 
     outputs = lstm_layer(
@@ -251,7 +251,10 @@ def conv_net_init(features, labels, mode, learning_rate_fn, loss_filter_fn, weig
             predictions=predictions,
             export_outputs={'predictions': tf.estimator.export.PredictOutput(predictions)})
 
+    filler_tensor = tf.constant(0.0, shape=[batch_size, 2000, 44], dtype=dtype)
     labels_1, labels_2 = tf.split(labels, num_or_size_splits=2, axis=2)
+    labels_1 = tf.concat([labels_1, filler_tensor], axis=2)
+    labels_2 = tf.concat([filler_tensor, labels_2], axis=2)
 
     print("labels_1: " + str(labels_1.shape))
 
