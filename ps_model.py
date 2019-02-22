@@ -220,18 +220,18 @@ def conv_net_init(features, labels, mode, learning_rate_fn, loss_filter_fn, weig
     combined_probs = tf.concat(probs, axis=2)
     print(combined_probs.shape)
 
-    outputs = lstm_layer(
-        combined_probs,
-        batch_size=batch_size,
-        num_units=256,
-        lengths=None,
-        # needs a vector of length batch size with the entries defining the length of each sequence. In case sequences differ in length
-        stack_size=1,
-        use_cudnn=True,
-        is_training=mode == tf.estimator.ModeKeys.TRAIN,
-        bidirectional=True)
+    # outputs = lstm_layer(
+    #     combined_probs,
+    #     batch_size=batch_size,
+    #     num_units=256,
+    #     lengths=None,
+    #     # needs a vector of length batch size with the entries defining the length of each sequence. In case sequences differ in length
+    #     stack_size=1,
+    #     use_cudnn=True,
+    #     is_training=mode == tf.estimator.ModeKeys.TRAIN,
+    #     bidirectional=True)
 
-    frame_probs = slim.fully_connected(outputs, 88, activation_fn=tf.sigmoid, scope='fc_frame')
+    #frame_probs = slim.fully_connected(outputs, 88, activation_fn=tf.sigmoid, scope='fc_frame')
 
     # Visualize conv1 kernels
     # with tf.variable_scope('conv1'):
@@ -241,8 +241,8 @@ def conv_net_init(features, labels, mode, learning_rate_fn, loss_filter_fn, weig
     #     tf.summary.image('conv1/kernels', grid, max_outputs=1)
 
     predictions = {
-        'classes': tf.cast(tf.greater_equal(frame_probs, 0.5), tf.float32),
-        'probabilities': frame_probs,
+        'classes': tf.cast(tf.greater_equal(combined_probs, 0.5), tf.float32),
+        'probabilities': combined_probs,
         'logits': combined_probs
     }
 
@@ -263,7 +263,7 @@ def conv_net_init(features, labels, mode, learning_rate_fn, loss_filter_fn, weig
     if use_rnn:
         individual_loss_subdiv_1 = log_loss(labels_1, probs_subdiv_1, epsilon=clip_norm)
         individual_loss_subdiv_2 = log_loss(labels_2, probs_subdiv_2, epsilon=clip_norm)
-        frame_losses = log_loss(frame_probs, labels, epsilon=clip_norm)
+        #frame_losses = log_loss(frame_probs, labels, epsilon=clip_norm)
     else:
         individual_loss = log_loss(labels, tf.clip_by_value(predictions['probabilities'], clip_norm, 1.0 - clip_norm),
                                    epsilon=0.0)
@@ -271,7 +271,7 @@ def conv_net_init(features, labels, mode, learning_rate_fn, loss_filter_fn, weig
     #loss = tf.reduce_mean(individual_loss_1)
     tf.losses.add_loss(tf.reduce_mean(individual_loss_subdiv_1))
     tf.losses.add_loss(tf.reduce_mean(individual_loss_subdiv_2))
-    tf.losses.add_loss(tf.reduce_mean(frame_losses))
+    #tf.losses.add_loss(tf.reduce_mean(frame_losses))
     loss = tf.losses.get_total_loss()
 
 
