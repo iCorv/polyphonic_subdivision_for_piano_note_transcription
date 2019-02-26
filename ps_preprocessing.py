@@ -188,6 +188,7 @@ def jams_to_midi(filepath, q=1):
 
 def convert_jams_to_midi(folder, q=1):
     for filepath in glob.glob(folder + '/*.jams'):
+        print(filepath)
         filename = filepath.split('/')[-1]
         filename = filename.split('.')[0]
         midi = jams_to_midi(filepath, q)
