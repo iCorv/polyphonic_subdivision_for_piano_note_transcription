@@ -21,6 +21,7 @@ import configurations.ps_preprocessing_parameters as ppp
 import warnings
 import pretty_midi
 import jams
+import glob
 from joblib import Parallel, delayed
 import multiprocessing
 from madmom.io import midi
@@ -183,6 +184,14 @@ def jams_to_midi(filepath, q=1):
         if len(midi_ch.notes) != 0:
             midi.instruments.append(midi_ch)
     return midi
+
+
+def convert_jams_to_midi(folder, q=1):
+    for filepath in glob.glob(folder + '*.jams'):
+        filename = filepath.split('/')[-1]
+        filename = filename.split('.')[0]
+        midi = jams_to_midi(filepath, q)
+        midi.write(folder + filename + '.mid')
 
 
 def _float_feature(value):
