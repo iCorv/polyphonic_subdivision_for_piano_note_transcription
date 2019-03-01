@@ -160,7 +160,7 @@ def compute_all_error_metrics(fold, mode, net, model_dir, save_dir, save_file, n
             util.eval_frame_wise(np.multiply(note_activation, onset_plus_6_gt), onset_plus_6_gt))
         frame_wise_offset_metrics.append(util.eval_frame_wise(np.multiply(note_activation, gt_offset), gt_offset))
 
-        rnn_act_fn = rnn_processor(os.path.join(config['audio_path'], file + '.wav'))
+        rnn_act_fn = rnn_processor(os.path.join(config['audio_path'], file + '_mic.wav'))
         onset_predictions_timings = proc(rnn_act_fn)
 
         onset_predictions = util.piano_roll_rep(onset_frames=(onset_predictions_timings[:, 0] /
