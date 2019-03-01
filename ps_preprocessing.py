@@ -191,7 +191,9 @@ def convert_jams_to_midi(folder, q=1):
         #filepath = filepath.split('\\')[-1]
         print(filepath)
         filename = filepath.split('/')[-1]
+        print(filename)
         filename = filename.split('.')[0]
+        print(filename)
         filename = os.path.join(folder, filename + '.mid')
         print(filename)
         midi = jams_to_midi(filepath, q)
