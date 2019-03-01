@@ -41,7 +41,7 @@ class Fold(Enum):
 
 def wav_to_spec(base_dir, filename, _audio_options):
     """Transforms the contents of a wav file into a series of spec frames."""
-    audio_filename = os.path.join(base_dir, filename + '.wav')
+    audio_filename = os.path.join(base_dir, filename + '_mic.wav')
 
     spec_type, audio_options = get_spec_processor(_audio_options, madmom.audio.spectrogram)
 
