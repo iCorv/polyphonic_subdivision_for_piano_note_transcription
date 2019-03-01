@@ -190,15 +190,12 @@ def convert_jams_to_midi(folder, q=1):
     files = [name for name in os.listdir(folder) if name.endswith(".jams")]
     for filepath in files:
         #filepath = filepath.split('\\')[-1]
-        print(filepath)
-        filename = filepath.split("/")[-1]
-        print(filename)
-        filename = filename.split(".")[0]
-        print(filename)
-        filename = os.path.join(folder, filename + ".mid")
-        print(filename)
+        #print(filepath)
+        midi_filepath = filepath.split(".")[0]
+        midi_filepath = os.path.join(folder, midi_filepath + ".mid")
+        filepath = os.path.join(folder, filepath)
         midi = jams_to_midi(filepath, q)
-        midi.write(filename)
+        midi.write(midi_filepath)
 
 
 def _float_feature(value):
