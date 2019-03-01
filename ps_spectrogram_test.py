@@ -19,25 +19,25 @@ import tensorflow as tf
 #     print(sess.run(result, feed_dict={m: m_feed}))
 
 audio_config = {'num_channels': 1,
-                               'sample_rate': 44100,
-                               'frame_size': 4096,
-                               'fft_size': 4096,
-                               'fps': 100,
-                               'num_bands': 48,
-                               'fmin': 10.0,
-                               'fmax': 5000.0,
-                               'fref': 440.0,
-                               'norm_filters': True,
-                               'unique_filters': True,
-                               'circular_shift': False,
-                               'norm': True}
+                'sample_rate': 44100,
+                'frame_size': 4096,
+                'fft_size': 4096,
+                'fps': 100,
+                'num_bands': 48,
+                'fmin': 10.0,
+                'fmax': 5000.0,
+                'fref': 440.0,
+                'norm_filters': True,
+                'unique_filters': True,
+                'circular_shift': False,
+                'norm': True}
 
 
 
 spec_proc = madmom.audio.spectrogram.LogarithmicFilteredSpectrogramProcessor()
 
-#spec = spec_proc('../../MAPS/ENSTDkAm/MUS/MAPS_MUS-chpn_op25_e3_ENSTDkAm.wav', **audio_config)
-spec = spec_proc('../../00_BN1-129-Eb_comp_mic.wav', **audio_config)
+spec = spec_proc('../../MAPS/ENSTDkAm/MUS/MAPS_MUS-chpn_op25_e3_ENSTDkAm.wav', **audio_config)
+#spec = spec_proc('../../00_BN1-129-Eb_comp_mic.wav', **audio_config)
 superflux_proc = madmom.audio.spectrogram.SpectrogramDifferenceProcessor(diff_max_bins=3)
 superflux_freq = superflux_proc(spec.T)
 superflux_freq = superflux_freq.T
@@ -45,7 +45,7 @@ superflux_freq = superflux_freq.T
 superflux_time = superflux_proc(spec)
 
 
-comb = spec+superflux_time #+superflux_freq
+comb = spec+superflux_time +superflux_freq
 print(np.max(comb))
 comb = comb/np.max(comb)
 comb = np.clip(comb, a_min=0.001, a_max=1.0)
