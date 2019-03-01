@@ -189,8 +189,6 @@ def jams_to_midi(filepath, q=1):
 def convert_jams_to_midi(folder, q=1):
     files = [name for name in os.listdir(folder) if name.endswith(".jams")]
     for filepath in files:
-        #filepath = filepath.split('\\')[-1]
-        #print(filepath)
         midi_filepath = filepath.split(".")[0]
         midi_filepath = os.path.join(folder, midi_filepath + ".mid")
         filepath = os.path.join(folder, filepath)
