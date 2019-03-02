@@ -31,13 +31,16 @@ def tfrecord_non_overlap_parser(serialized_example):
     example = tf.parse_single_example(
         serialized_example,
         features={"spec": tf.FixedLenFeature([num_features], tf.float32),
-                  "label": tf.FixedLenFeature([2000*num_labels], tf.int64)})
+                  "label": tf.FixedLenFeature([2000 * num_labels], tf.int64),
+                  "onset": tf.FixedLenFeature([2000 * num_labels], tf.int64)})
     features = tf.cast(example['spec'], tf.float32)
     # Reshape spec data into the original shape
     features = tf.reshape(features, feature_shape)
     label = tf.cast(example["label"], tf.int64)
     label = tf.reshape(label, [2000, 88])
-    return features, label
+    onset = tf.cast(example["onset"], tf.int64)
+    onset = tf.reshape(onset, [2000, 88])
+    return features, {"label": label, "onset": onset}
 
 
 def tfrecord_train_input_fn(filepath, batch_size, num_epochs):

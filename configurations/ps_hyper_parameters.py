@@ -76,7 +76,7 @@ def get_hyper_parameters(net):
     elif net == 'ResNet_v1_RNN':
         config = {'use_rnn': True,
                   'use_architecture': 'resnet',
-                  'batch_size': 1, # 4 for split spec, else we run in out of memory error # 1 for inference
+                  'batch_size': 4, # 4 for split spec, else we run in out of memory error # 1 for inference
                   'dtype': DEFAULT_DTYPE,
                   'clip_norm': 1e-7,
                   # initial learning rate
@@ -97,7 +97,7 @@ def get_hyper_parameters(net):
                   'frames': 2000,
                   'freq_bins': 199, # 76 for octave-wise HPCP, 229 for log spec
                   'num_channels': 1,
-                  'num_classes': 44,
+                  'num_classes': 88,
                   'num_examples': num_examples,
                   'num_val_examples': num_val_examples,
                   'num_test_examples': num_test_examples,

@@ -151,13 +151,16 @@ def midi_to_groundtruth(base_dir, filename, dt, n_frames, is_chroma=False):
     midi_filename = os.path.join(base_dir, filename + '.mid')
     notes = midi.load_midi(midi_filename)
     ground_truth = np.zeros((n_frames, 12 if is_chroma else 88)).astype(np.int64)
+    onset_gt = np.zeros((n_frames, 88)).astype(np.int64)
     for onset, _pitch, duration, velocity, _channel in notes:
         pitch = int(_pitch)
         frame_start = int(np.round(onset / dt))
         frame_end = int(np.round((onset + duration) / dt))
         label = np.mod(pitch - 21, 12) if is_chroma else pitch - 21
         ground_truth[frame_start:frame_end, label] = 1
-    return ground_truth
+        if frame_start+2 <= frame_end:
+            onset_gt[frame_start:frame_start+2, label] = 1
+    return ground_truth, onset_gt
 
 
 def jams_to_midi(filepath, q=1):
@@ -361,7 +364,7 @@ def write_file_to_non_overlap_tfrecords(write_file, base_dir, read_file, audio_c
         spectrogram = wav_to_spec(base_dir, read_file, audio_config)
 
     print(spectrogram.shape)
-    ground_truth = midi_to_groundtruth(base_dir, read_file, 1. / audio_config['fps'], spectrogram.shape[0])
+    ground_truth, onset_gt = midi_to_groundtruth(base_dir, read_file, 1. / audio_config['fps'], spectrogram.shape[0])
     total_examples_processed = 0
     # re-scale spectrogram to the range [0, 1]
     if norm:
@@ -369,14 +372,17 @@ def write_file_to_non_overlap_tfrecords(write_file, base_dir, read_file, audio_c
 
     split_spec = list(chunks(spectrogram, context_frames))
     split_gt = list(chunks(ground_truth, context_frames))
+    split_onset_gt = list(chunks(onset_gt, context_frames))
 
     split_spec[-1] = np.append(split_spec[-1], np.zeros([context_frames - split_spec[-1].shape[0], split_spec[-1].shape[1]]),
                                axis=0)
-    split_gt[-1] = np.append(split_gt[-1], np.zeros([context_frames - split_gt[-1].shape[0], split_gt[-1].shape[1]], dtype=np.int64),
-                               axis=0)
+    split_gt[-1] = np.append(split_gt[-1], np.zeros([context_frames - split_gt[-1].shape[0], split_gt[-1].shape[1]],
+                                                    dtype=np.int64), axis=0)
+    split_onset_gt[-1] = np.append(split_onset_gt[-1], np.zeros([context_frames - split_onset_gt[-1].shape[0],
+                                                                 split_onset_gt[-1].shape[1]], dtype=np.int64), axis=0)
 
-    for ex, gt in zip(split_spec, split_gt):
-        example = features_to_non_overlap_example(ex, gt)
+    for ex, gt, onset in zip(split_spec, split_gt, split_onset_gt):
+        example = features_to_non_overlap_multi_head_example(ex, gt, onset)
 
         # Serialize to string and write on the file
         writer.write(example.SerializeToString())
@@ -401,6 +407,18 @@ def features_to_non_overlap_example(spectrogram, ground_truth):
     """Build an example from spectrogram and ground truth data."""
     # Create a feature
     feature = {"label": _int64_feature(ground_truth.ravel()),
+               "spec": _float_feature(spectrogram.ravel())}
+
+    # Create an example protocol buffer
+    example = tf.train.Example(features=tf.train.Features(feature=feature))
+    return example
+
+
+def features_to_non_overlap_multi_head_example(spectrogram, ground_truth, onset):
+    """Build an example from spectrogram and ground truth data."""
+    # Create a feature
+    feature = {"label": _int64_feature(ground_truth.ravel()),
+               "onset": _int64_feature(onset.ravel()),
                "spec": _float_feature(spectrogram.ravel())}
 
     # Create an example protocol buffer

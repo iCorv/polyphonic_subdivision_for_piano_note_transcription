@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import madmom
 import tensorflow as tf
+from scipy.io import savemat
 
 
 
@@ -36,7 +37,8 @@ audio_config = {'num_channels': 1,
 
 spec_proc = madmom.audio.spectrogram.LogarithmicFilteredSpectrogramProcessor()
 
-spec = spec_proc('../../MAPS/ENSTDkAm/MUS/MAPS_MUS-chpn_op25_e3_ENSTDkAm.wav', **audio_config)
+#spec = spec_proc('../../MAPS/ENSTDkAm/MUS/MAPS_MUS-chpn_op25_e3_ENSTDkAm.wav', **audio_config)
+spec = spec_proc('../../MAPS/ENSTDkCl/MUS/MAPS_MUS-liz_rhap09_ENSTDkCl.wav', **audio_config)
 #spec = spec_proc('../../00_BN1-129-Eb_comp_mic.wav', **audio_config)
 superflux_proc = madmom.audio.spectrogram.SpectrogramDifferenceProcessor(diff_max_bins=3)
 superflux_freq = superflux_proc(spec.T)
@@ -51,5 +53,8 @@ comb = comb/np.max(comb)
 comb = np.clip(comb, a_min=0.001, a_max=1.0)
 print(comb.shape)
 plt.imshow(comb[:1000, :].T, aspect='auto', origin='lower')
+
+#savemat("MAPS_MUS-liz_rhap09_ENSTDkCl_spec_vs_comb_spec", {"spec": spec, "comb_spec": comb})
+
 
 plt.show()

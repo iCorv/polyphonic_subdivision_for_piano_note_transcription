@@ -192,17 +192,20 @@ def conv_net_init(features, labels, mode, learning_rate_fn, loss_filter_fn, weig
 
     features = tf.cast(features, dtype)
 
+    label_frames = labels["label"]
+    label_onset = labels["onset"]
+
     if mode != tf.estimator.ModeKeys.PREDICT:
         labels = tf.cast(labels, dtype)
 
 
     if use_rnn:
-        with tf.variable_scope('keyboard_subdivision_1'):
+        with tf.variable_scope('frames'):
             logits_1 = resnet_rnn(features, mode == tf.estimator.ModeKeys.TRAIN, batch_size=batch_size, data_format=data_format,
                                     num_classes=num_classes)
             probs_subdiv_1 = tf.sigmoid(logits_1)
             #probs_subdiv_1, _ = tf.split(probs_subdiv_1, num_or_size_splits=2, axis=2)
-        with tf.variable_scope('keyboard_subdivision_2'):
+        with tf.variable_scope('onsets'):
             logits_2 = resnet_rnn(features, mode == tf.estimator.ModeKeys.TRAIN, batch_size=batch_size,
                                 data_format=data_format,
                                 num_classes=num_classes)
@@ -231,7 +234,7 @@ def conv_net_init(features, labels, mode, learning_rate_fn, loss_filter_fn, weig
     #     is_training=mode == tf.estimator.ModeKeys.TRAIN,
     #     bidirectional=True)
 
-    #frame_probs = slim.fully_connected(outputs, 88, activation_fn=tf.sigmoid, scope='fc_frame')
+    combined_probs = slim.fully_connected(combined_probs, 88, activation_fn=tf.sigmoid, scope='fc_frame')
 
     # Visualize conv1 kernels
     # with tf.variable_scope('conv1'):
@@ -243,6 +246,7 @@ def conv_net_init(features, labels, mode, learning_rate_fn, loss_filter_fn, weig
     predictions = {
         'classes': tf.cast(tf.greater_equal(combined_probs, 0.5), tf.float32),
         'probabilities': combined_probs,
+        'onset_probabilities': probs_subdiv_2,
         'logits': combined_probs
     }
 
@@ -254,16 +258,16 @@ def conv_net_init(features, labels, mode, learning_rate_fn, loss_filter_fn, weig
             export_outputs={'predictions': tf.estimator.export.PredictOutput(predictions)})
 
     #filler_tensor = tf.constant(0.0, shape=[batch_size, 2000, 44], dtype=dtype)
-    labels_1, labels_2 = tf.split(labels, num_or_size_splits=2, axis=2)
+    #labels_1, labels_2 = tf.split(labels, num_or_size_splits=2, axis=2)
     #labels_1 = tf.concat([labels_1, filler_tensor], axis=2)
     #labels_2 = tf.concat([filler_tensor, labels_2], axis=2)
 
-    print("labels_1: " + str(labels_1.shape))
+    #print("labels_1: " + str(labels_1.shape))
 
     if use_rnn:
-        individual_loss_subdiv_1 = log_loss(labels_1, probs_subdiv_1, epsilon=clip_norm)
-        individual_loss_subdiv_2 = log_loss(labels_2, probs_subdiv_2, epsilon=clip_norm)
-        #frame_losses = log_loss(frame_probs, labels, epsilon=clip_norm)
+        individual_loss_subdiv_1 = log_loss(label_frames, probs_subdiv_1, epsilon=clip_norm)
+        individual_loss_subdiv_2 = log_loss(label_onset, probs_subdiv_2, epsilon=clip_norm)
+        frame_losses = log_loss(combined_probs, label_frames, epsilon=clip_norm)
     else:
         individual_loss = log_loss(labels, tf.clip_by_value(predictions['probabilities'], clip_norm, 1.0 - clip_norm),
                                    epsilon=0.0)
@@ -271,7 +275,7 @@ def conv_net_init(features, labels, mode, learning_rate_fn, loss_filter_fn, weig
     #loss = tf.reduce_mean(individual_loss_1)
     tf.losses.add_loss(tf.reduce_mean(individual_loss_subdiv_1))
     tf.losses.add_loss(tf.reduce_mean(individual_loss_subdiv_2))
-    #tf.losses.add_loss(tf.reduce_mean(frame_losses))
+    tf.losses.add_loss(tf.reduce_mean(frame_losses))
     loss = tf.losses.get_total_loss()
 
 
