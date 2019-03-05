@@ -191,7 +191,7 @@ def conv_net_init(features, labels, mode, learning_rate_fn, loss_filter_fn, weig
     #tf.summary.image('images', features, max_outputs=6)
 
     features = tf.cast(features, dtype)
-
+    print(labels.shape)
     #labels_unstacked = tf.unstack(labels, axis=4)
     label_frames = labels[0]
     label_onset = labels[1]
