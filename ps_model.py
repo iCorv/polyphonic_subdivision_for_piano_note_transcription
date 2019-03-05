@@ -191,10 +191,11 @@ def conv_net_init(features, labels, mode, learning_rate_fn, loss_filter_fn, weig
     #tf.summary.image('images', features, max_outputs=6)
 
     features = tf.cast(features, dtype)
-    print(labels.shape)
-    #labels_unstacked = tf.unstack(labels, axis=4)
-    label_frames = labels[0]
-    label_onset = labels[1]
+    #print(labels.shape)
+    labels_unstacked = tf.unstack(labels, axis=1)
+    print(labels_unstacked)
+    label_frames = labels_unstacked[0]
+    label_onset = labels_unstacked[1]
 
     if mode != tf.estimator.ModeKeys.PREDICT:
         labels = tf.cast(labels, dtype)
