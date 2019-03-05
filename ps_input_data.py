@@ -40,7 +40,8 @@ def tfrecord_non_overlap_parser(serialized_example):
     label = tf.reshape(label, [2000, 88])
     onset = tf.cast(example["onset"], tf.int64)
     onset = tf.reshape(onset, [2000, 88])
-    return features, {"label": label, "onset": onset}
+    labels = tf.stack([label, onset])
+    return features, labels
 
 
 def tfrecord_train_input_fn(filepath, batch_size, num_epochs):
