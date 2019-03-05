@@ -324,12 +324,12 @@ def conv_net_init(features, labels, mode, learning_rate_fn, loss_filter_fn, weig
     else:
         train_op = None
 
-    fn = tf.metrics.false_negatives(labels, predictions['classes'])
-    fp = tf.metrics.false_positives(labels, predictions['classes'])
-    tp = tf.metrics.true_positives(labels, predictions['classes'])
-    precision = tf.metrics.precision(labels, predictions['classes'])
-    recall = tf.metrics.recall(labels, predictions['classes'])
-    # this is the Kelz et. al. def of frame wise metric F1
+    fn = tf.metrics.false_negatives(label_frames, predictions['classes'])
+    fp = tf.metrics.false_positives(label_frames, predictions['classes'])
+    tp = tf.metrics.true_positives(label_frames, predictions['classes'])
+    precision = tf.metrics.precision(label_frames, predictions['classes'])
+    recall = tf.metrics.recall(label_frames, predictions['classes'])
+    # this is the Kelz et al. def of frame wise metric F1
     f = tf.multiply(tf.constant(2.0), tf.multiply(precision[0], recall[0]))
     f = tf.divide(f, tf.add(precision[0], recall[0]))
 
