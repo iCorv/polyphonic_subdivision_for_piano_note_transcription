@@ -21,7 +21,7 @@ num_val_examples = 812
 num_test_examples = 812
 batch_size = 8 # 128 for conv, 8 for RNN
 batches_per_epoch = int(round(num_examples/batch_size))
-train_epochs = 150
+train_epochs = 200
 total_train_steps = train_epochs * batches_per_epoch
 
 
