@@ -75,11 +75,11 @@ def get_note_activation(base_dir, read_file, audio_config, norm, context_frames,
 
     # get note activation fn from model
     if use_rnn:
-        note_activation = spectrogram_to_non_overlap_note_activation(spectrogram, 2000, predictor)
+        note_activation, onset_activation = spectrogram_to_non_overlap_note_activation(spectrogram, 2000, predictor)
     else:
         note_activation = spectrogram_to_note_activation(spectrogram, context_frames, predictor)
 
-    return note_activation, gt_frame, gt_onset, gt_offset, onset_plus_1_gt, onset_plus_2_gt, onset_plus_3_gt, onset_plus_4_gt, onset_plus_5_gt, onset_plus_6_gt
+    return note_activation, onset_activation, gt_frame, gt_onset, gt_offset, onset_plus_1_gt, onset_plus_2_gt, onset_plus_3_gt, onset_plus_4_gt, onset_plus_5_gt, onset_plus_6_gt
 
 
 def compute_all_error_metrics(fold, mode, net, model_dir, save_dir, save_file, norm=False):
@@ -128,13 +128,14 @@ def compute_all_error_metrics(fold, mode, net, model_dir, save_dir, save_file, n
     note_wise_onset_metrics_with_onset_pred_heuristic = []
     note_wise_onset_offset_metrics_with_onset_pred_heuristic = []
 
-    #filenames = filenames[0:3]
+    filenames = filenames[0:3]
     num_pieces = len(filenames)
     index = 0
     onset_duration_heuristic = 10
     for file in filenames:
         # split file path string at "/" and take the last split, since it's the actual filename
         note_activation, \
+        onset_activation, \
         gt_frame, gt_onset, \
         gt_offset, \
         onset_plus_1_gt, \
@@ -160,19 +161,22 @@ def compute_all_error_metrics(fold, mode, net, model_dir, save_dir, save_file, n
             util.eval_frame_wise(np.multiply(note_activation, onset_plus_6_gt), onset_plus_6_gt))
         frame_wise_offset_metrics.append(util.eval_frame_wise(np.multiply(note_activation, gt_offset), gt_offset))
 
-        rnn_act_fn = rnn_processor(os.path.join(config['audio_path'], file + '_mic.wav'))
-        onset_predictions_timings = proc(rnn_act_fn)
+        # rnn_act_fn = rnn_processor(os.path.join(config['audio_path'], file + '_mic.wav'))
+        # onset_predictions_timings = proc(rnn_act_fn)
+        #
+        # onset_predictions = util.piano_roll_rep(onset_frames=(onset_predictions_timings[:, 0] /
+        #                                                       (1. / audio_config['fps'])).astype(int),
+        #                                         midi_pitches=onset_predictions_timings[:, 1].astype(int) - 21,
+        #                                         piano_roll_shape=np.shape(frames))
+        #
+        #
+        # onset_predictions_with_heuristic = util.piano_roll_rep(onset_frames=(onset_predictions_timings[:, 0] /
+        #                                                       (1. / audio_config['fps'])).astype(int),
+        #                                         midi_pitches=onset_predictions_timings[:, 1].astype(int) - 21,
+        #                                         piano_roll_shape=np.shape(frames), onset_duration=onset_duration_heuristic)
 
-        onset_predictions = util.piano_roll_rep(onset_frames=(onset_predictions_timings[:, 0] /
-                                                              (1. / audio_config['fps'])).astype(int),
-                                                midi_pitches=onset_predictions_timings[:, 1].astype(int) - 21,
-                                                piano_roll_shape=np.shape(frames))
-
-
-        onset_predictions_with_heuristic = util.piano_roll_rep(onset_frames=(onset_predictions_timings[:, 0] /
-                                                              (1. / audio_config['fps'])).astype(int),
-                                                midi_pitches=onset_predictions_timings[:, 1].astype(int) - 21,
-                                                piano_roll_shape=np.shape(frames), onset_duration=onset_duration_heuristic)
+        onset_predictions = np.greater_equal(onset_activation, 0.5)
+        onset_predictions_with_heuristic = np.greater_equal(onset_activation, 0.5)
 
         frames_with_onset_heuristic = np.logical_or(frames, onset_predictions_with_heuristic)
 
@@ -445,7 +449,7 @@ def build_predictor(net, model_dir):
 def get_activation(features, estimator_predictor):
     p = estimator_predictor({'input': features})
 
-    return p['probabilities']
+    return p['probabilities'], p['onset_probabilities']
 
 
 def spectrogram_to_note_activation(spec, context_frames, estimator_predictor):
@@ -459,15 +463,19 @@ def spectrogram_to_note_activation(spec, context_frames, estimator_predictor):
 
 def spectrogram_to_non_overlap_note_activation(spec, context_frames, estimator_predictor):
     note_activation = np.zeros([1, 88])
+    onset_activation = np.zeros([1, 88])
     split_spec = list(util.chunks(spec, context_frames))
     pad_length = context_frames - split_spec[-1].shape[0]
     #print(pad_length)
     split_spec[-1] = np.append(split_spec[-1], np.zeros([pad_length, split_spec[-1].shape[1]]), axis=0)
     #print(split_spec[-1].shape)
     for split in split_spec:
-        act_fn = np.squeeze(get_activation(split, estimator_predictor))
+        frame_act, onset_act = get_activation(split, estimator_predictor)
+        frame_act = np.squeeze(frame_act)
+        onset_act = np.squeeze(onset_act)
         #print(act_fn.shape)
-        note_activation = np.append(note_activation, act_fn, axis=0)
+        note_activation = np.append(note_activation, frame_act, axis=0)
+        onset_activation = np.append(onset_activation, onset_act, axis=0)
 
     #return note_activation[1:spec.shape[0]+1]
-    return note_activation[5:spec.shape[0]+5]
+    return note_activation[5:spec.shape[0]+5], onset_activation[5:spec.shape[0]+5]
