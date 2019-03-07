@@ -178,6 +178,8 @@ def compute_all_error_metrics(fold, mode, net, model_dir, save_dir, save_file, n
         onset_predictions = np.greater_equal(onset_activation, 0.5)
         onset_predictions_with_heuristic = np.greater_equal(onset_activation, 0.5)
 
+
+
         frames_with_onset_heuristic = np.logical_or(frames, onset_predictions_with_heuristic)
 
         frame_wise_metrics_with_onset_pred.append(util.eval_frame_wise(np.logical_or(frames, onset_predictions), gt_frame))
@@ -354,7 +356,7 @@ def transcribe_piano_piece(audio_file, net, model_dir, save_dir, onset_duration_
 
     # get note activation fn from model
     if use_rnn:
-        note_activation = spectrogram_to_non_overlap_note_activation(spectrogram, hparams['frames'], predictor)
+        note_activation, onset_activation = spectrogram_to_non_overlap_note_activation(spectrogram, hparams['frames'], predictor)
     else:
         note_activation = spectrogram_to_note_activation(spectrogram, config['context_frames'], predictor)
 
@@ -373,17 +375,20 @@ def transcribe_piano_piece(audio_file, net, model_dir, save_dir, onset_duration_
     onset_predictions_timings = proc(rnn_act_fn)
 
     # transform onset predictions to piano roll representation
-    onset_predictions = util.piano_roll_rep(onset_frames=(onset_predictions_timings[:, 0] /
-                                                          (1. / audio_config['fps'])).astype(int),
-                                            midi_pitches=onset_predictions_timings[:, 1].astype(int) - 21,
-                                            piano_roll_shape=np.shape(frames))
+    # onset_predictions = util.piano_roll_rep(onset_frames=(onset_predictions_timings[:, 0] /
+    #                                                       (1. / audio_config['fps'])).astype(int),
+    #                                         midi_pitches=onset_predictions_timings[:, 1].astype(int) - 21,
+    #                                         piano_roll_shape=np.shape(frames))
+    #
+    # onset_predictions_with_heuristic = util.piano_roll_rep(onset_frames=(onset_predictions_timings[:, 0] /
+    #                                                                      (1. / audio_config['fps'])).astype(int),
+    #                                                        midi_pitches=onset_predictions_timings[:, 1].astype(
+    #                                                            int) - 21,
+    #                                                        piano_roll_shape=np.shape(frames),
+    #                                                        onset_duration=onset_duration_heuristic)
 
-    onset_predictions_with_heuristic = util.piano_roll_rep(onset_frames=(onset_predictions_timings[:, 0] /
-                                                                         (1. / audio_config['fps'])).astype(int),
-                                                           midi_pitches=onset_predictions_timings[:, 1].astype(
-                                                               int) - 21,
-                                                           piano_roll_shape=np.shape(frames),
-                                                           onset_duration=onset_duration_heuristic)
+    onset_predictions = np.greater_equal(onset_activation, 0.5)
+    onset_predictions_with_heuristic = np.greater_equal(onset_activation, 0.5)
 
     # add onset predictions and onset prediction with heuristic to transcription
     frames_with_onset = np.logical_or(frames, onset_predictions)
@@ -478,4 +483,4 @@ def spectrogram_to_non_overlap_note_activation(spec, context_frames, estimator_p
         onset_activation = np.append(onset_activation, onset_act, axis=0)
 
     #return note_activation[1:spec.shape[0]+1]
-    return note_activation[1:spec.shape[0]+1], onset_activation[1:spec.shape[0]+1]
+    return note_activation[3:spec.shape[0]+3], onset_activation[1:spec.shape[0]+1]
