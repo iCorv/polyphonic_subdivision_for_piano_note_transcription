@@ -345,7 +345,7 @@ def transcribe_piano_piece(audio_file, net, model_dir, save_dir, onset_duration_
     proc = madmom.features.notes.NotePeakPickingProcessor(threshold=0.1, fps=100)
     # init piano note processor for onset prediction
     rnn_processor = madmom.features.notes.RNNPianoNoteProcessor()
-
+    print(audio_file.split('.')[0])
     spectrogram = prep.wav_to_spec("", audio_file.split('.')[0], audio_config)
 
     # re-scale spectrogram to the range [0, 1]
