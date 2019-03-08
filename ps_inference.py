@@ -183,7 +183,7 @@ def compute_all_error_metrics(fold, mode, net, model_dir, save_dir, save_file, n
                                             onset_predictions=None,
                                             offset_predictions=None)
 
-        onset_predictions_with_heuristic = util.piano_roll_rep(onset_frames=(est_intervals_onset_pred_only /
+        onset_predictions_with_heuristic = util.piano_roll_rep(onset_frames=(est_intervals_onset_pred_only[:,0] /
                                                               (1. / audio_config['fps'])).astype(int),
                                                 midi_pitches=est_pitches_onset_pred_only.astype(int) - 21,
                                                 piano_roll_shape=np.shape(frames), onset_duration=onset_duration_heuristic)
