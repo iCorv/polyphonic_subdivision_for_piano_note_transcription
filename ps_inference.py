@@ -346,6 +346,7 @@ def compute_all_error_metrics(fold, mode, net, model_dir, save_dir, save_file, n
 
 
 def transcribe_piano_piece(audio_file, net, model_dir, save_dir, onset_duration_heuristic, norm=False, use_rnn=False):
+    """ps_inference.transcribe_piano_piece('C:/Users/cjaed/Documents/MAPS/ENSTDkAm/MUS/MAPS_MUS-chpn_op25_e4_ENSTDkAm.wav', 'ResNet_v1_RNN', './model/', './transcription/',0, False, True)"""
     config = ppp.get_preprocessing_parameters(0)
     audio_config = config['audio_config']
 

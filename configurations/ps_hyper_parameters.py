@@ -15,13 +15,14 @@ DEFAULT_DTYPE = tf.float32
 
 # RNN with 2000 frames
 # fold_1: train - 2188, valid - , test - 812
+# fold_1: train - 2213, valid - , test - 812
 
-num_examples = 2188
+num_examples = 2213
 num_val_examples = 812
 num_test_examples = 812
 batch_size = 8 # 128 for conv, 8 for RNN
 batches_per_epoch = int(round(num_examples/batch_size))
-train_epochs = 200
+train_epochs = 150
 total_train_steps = train_epochs * batches_per_epoch
 
 
@@ -76,7 +77,7 @@ def get_hyper_parameters(net):
     elif net == 'ResNet_v1_RNN':
         config = {'use_rnn': True,
                   'use_architecture': 'resnet',
-                  'batch_size': 1, # 4 for split spec, else we run in out of memory error # 1 for inference
+                  'batch_size': 4, # 4 for split spec, else we run in out of memory error # 1 for inference
                   'dtype': DEFAULT_DTYPE,
                   'clip_norm': 1e-7,
                   # initial learning rate
