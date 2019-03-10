@@ -77,7 +77,7 @@ def get_hyper_parameters(net):
     elif net == 'ResNet_v1_RNN':
         config = {'use_rnn': True,
                   'use_architecture': 'resnet',
-                  'batch_size': 4, # 4 for split spec, else we run in out of memory error # 1 for inference
+                  'batch_size': 1, # 4 for split spec, else we run in out of memory error # 1 for inference
                   'dtype': DEFAULT_DTYPE,
                   'clip_norm': 1e-7,
                   # initial learning rate
