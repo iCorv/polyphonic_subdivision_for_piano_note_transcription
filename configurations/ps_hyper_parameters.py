@@ -15,9 +15,10 @@ DEFAULT_DTYPE = tf.float32
 
 # RNN with 2000 frames
 # fold_1: train - 2188, valid - , test - 812
-# fold_1: train - 2213, valid - , test - 812
+# fold_2: train - 2213, valid - , test - 812
+# fold_3: train - 2274, valid - , test - 812
 
-num_examples = 2213
+num_examples = 2274
 num_val_examples = 812
 num_test_examples = 812
 batch_size = 8 # 128 for conv, 8 for RNN
