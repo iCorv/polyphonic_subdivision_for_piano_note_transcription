@@ -133,7 +133,7 @@ def compute_all_error_metrics(fold, mode, net, model_dir, save_dir, save_file, n
     num_pieces = len(filenames)
     index = 0
     onset_duration_heuristic = 10
-    for file in tqdm(filenames, num_pieces):
+    for file in tqdm(filenames, total=num_pieces):
         # split file path string at "/" and take the last split, since it's the actual filename
         note_activation, \
         onset_activation, \
