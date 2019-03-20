@@ -131,7 +131,6 @@ def compute_all_error_metrics(fold, mode, net, model_dir, save_dir, save_file, n
 
     #filenames = filenames[0:3]
     num_pieces = len(filenames)
-    index = 0
     onset_duration_heuristic = 10
     for file in tqdm(filenames, total=num_pieces):
         # split file path string at "/" and take the last split, since it's the actual filename
@@ -265,8 +264,7 @@ def compute_all_error_metrics(fold, mode, net, model_dir, save_dir, save_file, n
                                                                util.midi_to_hz(
                                                                    est_pitches_onset_pred_heuristic)))
 
-        index += 1
-        print(index)
+
 
     # frame-wise metrics (precision/recall/f1-score
     mean_frame_wise = util.mean_eval_frame_wise(frame_wise_metrics, num_pieces)
