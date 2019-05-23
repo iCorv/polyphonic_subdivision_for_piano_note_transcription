@@ -50,7 +50,7 @@ def write_note_activation_to_mat(write_file, base_dir, read_file, audio_config, 
     savemat(write_file, {"features": note_activation, "labels": ground_truth})
 
 
-def get_note_activation(base_dir, read_file, audio_config, norm, context_frames, predictor, is_hpcp=False, use_rnn=False):
+def get_note_activation(base_dir, read_file, audio_config, norm, context_frames, predictor, n_onset_plus, is_hpcp=False, use_rnn=False, offset=0):
     """Transforms a wav and mid file to features and writes them to a tfrecords file."""
 
     if is_hpcp:
@@ -62,7 +62,7 @@ def get_note_activation(base_dir, read_file, audio_config, norm, context_frames,
     gt_onset, \
     gt_offset, \
     onset_plus = prep.midi_to_triple_groundtruth(base_dir, read_file, 1. / audio_config['fps'],
-                                                 spectrogram.shape[0])
+                                                 spectrogram.shape[0], n_onset_plus)
     # re-scale spectrogram to the range [0, 1]
     if norm:
         spectrogram = np.divide(spectrogram, np.max(spectrogram))
@@ -132,7 +132,7 @@ def compute_all_error_metrics(fold, mode, net, model_dir, save_dir, save_file, n
         gt_frame, gt_onset, \
         gt_offset, \
         onset_plus = get_note_activation(config['audio_path'], file, audio_config,
-                                         norm, config['context_frames'], predictor, config['is_hpcp'], use_rnn=hparams['use_rnn'])
+                                         norm, config['context_frames'], predictor, n_onset_plus, config['is_hpcp'], use_rnn=hparams['use_rnn'])
 
         frames = np.greater_equal(note_activation, 0.5)
         # return precision, recall, f-score, accuracy (without TN)
