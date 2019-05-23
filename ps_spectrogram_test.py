@@ -5,7 +5,8 @@ import numpy as np
 import madmom
 import tensorflow as tf
 from scipy.io import savemat
-
+import ps_preprocessing
+from pathlib import Path
 
 
 # val = 2
@@ -33,28 +34,31 @@ audio_config = {'num_channels': 1,
                 'circular_shift': False,
                 'norm': True}
 
+base_dir = Path('../../MAPS/ENSTDkAm/MUS/').resolve()
+file = 'MAPS_MUS-chpn_op25_e4_ENSTDkAm'
+spec = ps_preprocessing.wav_to_spec(str(base_dir), file, audio_config)
+#ohpcp = ps_preprocessing.wav_to_hpcp(str(base_dir), file)
 
-
-spec_proc = madmom.audio.spectrogram.LogarithmicFilteredSpectrogramProcessor()
+#spec_proc = madmom.audio.spectrogram.LogarithmicFilteredSpectrogramProcessor()
 
 #spec = spec_proc('../../MAPS/ENSTDkAm/MUS/MAPS_MUS-chpn_op25_e3_ENSTDkAm.wav', **audio_config)
-spec = spec_proc('../../MAPS/ENSTDkCl/MUS/MAPS_MUS-liz_rhap09_ENSTDkCl.wav', **audio_config)
+#spec = spec_proc('../../MAPS/ENSTDkCl/MUS/MAPS_MUS-liz_rhap09_ENSTDkCl.wav', **audio_config)
 #spec = spec_proc('../../00_BN1-129-Eb_comp_mic.wav', **audio_config)
-superflux_proc = madmom.audio.spectrogram.SpectrogramDifferenceProcessor(diff_max_bins=3)
-superflux_freq = superflux_proc(spec.T)
-superflux_freq = superflux_freq.T
+#superflux_proc = madmom.audio.spectrogram.SpectrogramDifferenceProcessor(diff_max_bins=3)
+#superflux_freq = superflux_proc(spec.T)
+#superflux_freq = superflux_freq.T
 
-superflux_time = superflux_proc(spec)
+#superflux_time = superflux_proc(spec)
 
 
-comb = spec+superflux_time +superflux_freq
-print(np.max(comb))
-comb = comb/np.max(comb)
-comb = np.clip(comb, a_min=0.001, a_max=1.0)
-print(comb.shape)
-plt.imshow(comb[:1000, :].T, aspect='auto', origin='lower')
+#comb = spec+superflux_time +superflux_freq
+#print(np.max(comb))
+#comb = comb/np.max(comb)
+#comb = np.clip(comb, a_min=0.001, a_max=1.0)
+#print(comb.shape)
+plt.imshow(spec[0:1000, :].T, aspect='auto', origin='lower')
 
-#savemat("MAPS_MUS-liz_rhap09_ENSTDkCl_spec_vs_comb_spec", {"spec": spec, "comb_spec": comb})
-
+#savemat("MAPS_MUS-chpn_op25_e4_ENSTDkAm_spec", {"spec": spec[:555, :], "ohpcp": ohpcp[:555, :]})
+savemat("MAPS_MUS-chpn_op25_e4_ENSTDkAm_spec", {"spec": spec})
 
 plt.show()

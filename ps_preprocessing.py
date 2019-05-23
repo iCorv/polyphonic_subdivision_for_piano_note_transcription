@@ -47,7 +47,7 @@ def wav_to_spec(base_dir, filename, _audio_options):
 
 
     spectrogram = spec_type(audio_filename, **audio_options)
-
+    #comb = spectrogram
     superflux_proc = madmom.audio.spectrogram.SpectrogramDifferenceProcessor(diff_max_bins=3)
     superflux_freq = superflux_proc(spectrogram.T)
     superflux_freq = superflux_freq.T
@@ -109,42 +109,30 @@ def get_spec_processor(_audio_options, madmom_spec):
     return spectype, audio_options
 
 
-def midi_to_triple_groundtruth(base_dir, filename, dt, n_frames):
+def midi_to_triple_groundtruth(base_dir, filename, dt, n_frames, n_onset_plus):
     """Computes the frame-wise ground truth from a piano midi file as a note vector. For frame, onset and offset"""
     midi_filename = os.path.join(base_dir, filename + '.mid')
     notes = midi.load_midi(midi_filename)
     frame_gt = np.zeros((n_frames, 88)).astype(np.int64)
     onset_gt = np.zeros((n_frames, 88)).astype(np.int64)
-    onset_plus_1_gt = np.zeros((n_frames, 88)).astype(np.int64)
-    onset_plus_2_gt = np.zeros((n_frames, 88)).astype(np.int64)
-    onset_plus_3_gt = np.zeros((n_frames, 88)).astype(np.int64)
-    onset_plus_4_gt = np.zeros((n_frames, 88)).astype(np.int64)
-    onset_plus_5_gt = np.zeros((n_frames, 88)).astype(np.int64)
-    onset_plus_6_gt = np.zeros((n_frames, 88)).astype(np.int64)
+    onset_plus = []
+    for index in range(0, n_onset_plus):
+        onset_plus.append(np.zeros((n_frames, 88)).astype(np.int64))
+
     offset_gt = np.zeros((n_frames, 88)).astype(np.int64)
     for onset, _pitch, duration, velocity, _channel in notes:
         pitch = int(_pitch)
         frame_start = int(np.round(onset / dt))
         frame_end = int(np.round((onset + duration) / dt))
         label = pitch - 21
-        if frame_end < n_frames:
-            frame_gt[frame_start:frame_end, label] = 1
-            onset_gt[frame_start, label] = 1
-            if frame_start + 1 < frame_end:
-                onset_plus_1_gt[frame_start+1, label] = 1
-            if frame_start + 2 < frame_end:
-                onset_plus_2_gt[frame_start+2, label] = 1
-            if frame_start + 3 < frame_end:
-                onset_plus_3_gt[frame_start+3, label] = 1
-            if frame_start + 4 < frame_end:
-                onset_plus_4_gt[frame_start+4, label] = 1
-            if frame_start + 5 < frame_end:
-                onset_plus_5_gt[frame_start+5, label] = 1
-            if frame_start + 6 < frame_end:
-                onset_plus_6_gt[frame_start+6, label] = 1
-            offset_gt[frame_end, label] = 1
-    return frame_gt, onset_gt, offset_gt, onset_plus_1_gt, onset_plus_2_gt, onset_plus_3_gt, onset_plus_4_gt, onset_plus_5_gt, onset_plus_6_gt
+        frame_gt[frame_start:frame_end, label] = 1
+        onset_gt[frame_start, label] = 1
+        for index in range(0, n_onset_plus):
+            if frame_start + index + 1 < frame_end:
+                onset_plus[index][frame_start + index + 1, label] = 1
 
+        offset_gt[frame_end, label] = 1
+    return frame_gt, onset_gt, offset_gt, onset_plus
 
 def midi_to_groundtruth(base_dir, filename, dt, n_frames, is_chroma=False):
     """Computes the frame-wise ground truth from a piano midi file, as a note or chroma vector."""
