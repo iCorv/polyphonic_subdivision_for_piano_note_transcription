@@ -16,7 +16,7 @@ def get_estimator(net, model_dir):
 def export_saved_model(net, model_dir, export_dir_base, frames, bins):
     serving_input_receiver_fn = infer.get_serving_input_fn(frames, bins)
     estimator = get_estimator(net, model_dir)
-    estimator.export_saved_model(export_dir_base=export_dir_base, serving_input_receiver_fn=serving_input_receiver_fn)#, checkpoint_path=model_dir+"/*")
+    estimator.export_savedmodel(export_dir_base=export_dir_base, serving_input_receiver_fn=serving_input_receiver_fn,strip_default_attrs=True)#, checkpoint_path=model_dir+"/*")
 
 #
 # def convert_model_to_tflite():
