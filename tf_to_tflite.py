@@ -13,10 +13,10 @@ def get_estimator(net, model_dir):
     return estimator
 
 
-def export_saved_model(net, model_dir, frames, bins):
+def export_saved_model(net, model_dir, export_dir_base, frames, bins):
     serving_input_receiver_fn = infer.get_serving_input_fn(frames, bins)
     estimator = get_estimator(net, model_dir)
-    estimator.export_saved_model(export_dir_base="Users/Jaedicke/tensorflow/polyphonic_subdivision_for_piano_note_transcription/model_multitask_resnet_fold_1/saved_model/", serving_input_receiver_fn=serving_input_receiver_fn, checkpoint_path="Users/Jaedicke/tensorflow/polyphonic_subdivision_for_piano_note_transcription/model_multitask_resnet_fold_1/*")
+    estimator.export_saved_model(export_dir_base=export_dir_base, serving_input_receiver_fn=serving_input_receiver_fn)#, checkpoint_path=model_dir+"/*")
 
 #
 # def convert_model_to_tflite():
@@ -33,6 +33,7 @@ def export_saved_model(net, model_dir, frames, bins):
 
 def main():
     model_dir = "Users/Jaedicke/tensorflow/polyphonic_subdivision_for_piano_note_transcription/model_multitask_resnet_fold_1"
+    export_dir_base = "Users/Jaedicke/tensorflow/polyphonic_subdivision_for_piano_note_transcription/model_multitask_resnet_fold_1/saved_model"
     net = "ResNet_v1_RNN"
     #infer.build_predictor(net, model_dir)
     export_saved_model(net, model_dir, 2000, 199)
