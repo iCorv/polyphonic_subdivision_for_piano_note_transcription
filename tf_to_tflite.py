@@ -22,7 +22,7 @@ def export_saved_model(net, model_dir, export_dir_base, frames, bins):
 def convert_model_to_tflite(saved_model_dir, export_dir):
     #saved_model_dir = "Users/Jaedicke/tensorflow/one_octave_resnet/model_ResNet_fold_1/"
 
-    converter = tf.lite.TFLiteConverter.from_saved_model(saved_model_dir)
+    converter = tf.contrib.lite.TFLiteConverter.from_saved_model(saved_model_dir)
     converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS,
                                            tf.lite.OpsSet.SELECT_TF_OPS]
     tflite_model = converter.convert()
